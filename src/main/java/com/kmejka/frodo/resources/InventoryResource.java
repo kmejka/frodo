@@ -19,6 +19,9 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.annotation.Timed;
 import com.kmejka.frodo.domain.InventoryObject;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -32,17 +35,23 @@ public class InventoryResource {
     public static final String ONE_RING_KEY = "ONE-RING";
 
     private Map<String, InventoryObject> storage;
+    private Counter ringStealCounter;
 
-    public InventoryResource(final Map<String, InventoryObject> storage) {
+    public InventoryResource(final Map<String, InventoryObject> storage,
+                             final MetricRegistry metricRegistry) {
         this.storage = checkNotNull(storage, "storage can't be null!");
+        checkNotNull(metricRegistry,"metricRegistry can't be null!");
+        ringStealCounter = metricRegistry.counter("ringStealCounter");
     }
 
     @GET
+    @Timed
     public Collection<InventoryObject> getWholeInventory() {
         return storage.values();
     }
 
     @POST
+    @Timed
     public Response saveObjectInInventory(final InventoryObject object, final @Context UriInfo uriInfo) {
         final String uuid = UUID.randomUUID().toString();
         object.setId(uuid);
@@ -55,12 +64,14 @@ public class InventoryResource {
 
     @GET
     @Path("/{key}")
+    @Timed
     public InventoryObject getObjectFromInventory(@PathParam("key") final String key, final InventoryObject object) {
         return this.storage.get(key);
     }
 
     @PUT
     @Path("/ring")
+    @Timed
     public Response saveRing(final InventoryObject theRing, final @Context UriInfo uriInfo) {
         theRing.setId(ONE_RING_KEY);
         this.storage.put(ONE_RING_KEY, theRing);
@@ -72,6 +83,7 @@ public class InventoryResource {
 
     @GET
     @Path("/ring")
+    @Timed
     public Response seeTheRing(@QueryParam("friend") final boolean isFriend) {
         if (isFriend) {
             return Response.ok(storage.get(ONE_RING_KEY))
@@ -85,9 +97,11 @@ public class InventoryResource {
 
     @DELETE
     @Path("/ring")
+    @Timed
     public Response stealRing(@QueryParam("force") final boolean useForce) {
         if (useForce) {
             storage.remove(ONE_RING_KEY);
+            ringStealCounter.inc();
             return Response.ok().build();
         } else {
             return Response.status(Response.Status.UNAUTHORIZED)

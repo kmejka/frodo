@@ -2,9 +2,11 @@ package com.kmejka.frodo;
 
 import java.util.HashMap;
 
+import com.codahale.metrics.MetricRegistry;
 import com.kmejka.frodo.conf.FrodoConfiguration;
 import com.kmejka.frodo.domain.InventoryObject;
 import com.kmejka.frodo.domain.User;
+import com.kmejka.frodo.health.FrodoHealthcheck;
 import com.kmejka.frodo.resources.InfoResource;
 import com.kmejka.frodo.resources.InventoryResource;
 import com.kmejka.frodo.resources.TalkResource;
@@ -35,10 +37,12 @@ public class FrodoApplication extends Application<FrodoConfiguration> {
     }
 
     public void run(final FrodoConfiguration frodoConfiguration, final Environment environment) throws Exception {
+        final MetricRegistry metricRegistry = environment.metrics();
+
         final InfoResource infoResource = new InfoResource(getName());
         final TalkResource talkResource = new TalkResource(frodoConfiguration.getName());
         final HashMap<String, InventoryObject> frodoStorage = new HashMap<>();
-        final InventoryResource inventoryResource = new InventoryResource(frodoStorage);
+        final InventoryResource inventoryResource = new InventoryResource(frodoStorage, metricRegistry);
         environment.jersey().register(infoResource);
         environment.jersey().register(talkResource);
         environment.jersey().register(inventoryResource);
@@ -51,5 +55,8 @@ public class FrodoApplication extends Application<FrodoConfiguration> {
                         .buildAuthFilter()));
         environment.jersey().register(RolesAllowedDynamicFeature.class);
         environment.jersey().register(new AuthValueFactoryProvider.Binder<>(User.class));
+
+        final FrodoHealthcheck healthCheck = new FrodoHealthcheck(frodoStorage);
+        environment.healthChecks().register("frodo-healthcheck", healthCheck);
     }
 }
