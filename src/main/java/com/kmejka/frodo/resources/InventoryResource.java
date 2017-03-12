@@ -65,7 +65,7 @@ public class InventoryResource {
     @GET
     @Path("/{key}")
     @Timed
-    public InventoryObject getObjectFromInventory(@PathParam("key") final String key, final InventoryObject object) {
+    public InventoryObject getObjectFromInventory(@PathParam("key") final String key) {
         return this.storage.get(key);
     }
 

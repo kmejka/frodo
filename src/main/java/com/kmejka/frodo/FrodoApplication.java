@@ -12,6 +12,7 @@ import com.kmejka.frodo.resources.InventoryResource;
 import com.kmejka.frodo.resources.TalkResource;
 import com.kmejka.frodo.security.BasicAuthenticator;
 import com.kmejka.frodo.security.BasicAuthorizer;
+import de.thomaskrille.dropwizard_template_config.TemplateConfigBundle;
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthDynamicFeature;
 import io.dropwizard.auth.AuthValueFactoryProvider;
@@ -33,6 +34,7 @@ public class FrodoApplication extends Application<FrodoConfiguration> {
 
     @Override
     public void initialize(final Bootstrap<FrodoConfiguration> bootstrap) {
+        bootstrap.addBundle(new TemplateConfigBundle());
         super.initialize(bootstrap);
     }
 
