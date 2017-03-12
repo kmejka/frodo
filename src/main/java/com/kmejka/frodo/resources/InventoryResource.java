@@ -1,5 +1,6 @@
 package com.kmejka.frodo.resources;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -25,6 +26,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Path("/inventory")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@RolesAllowed("ADMIN")
 public class InventoryResource {
 
     public static final String ONE_RING_KEY = "ONE-RING";
